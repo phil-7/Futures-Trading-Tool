@@ -1,11 +1,14 @@
+from libraries.scraper import scraper
 from libraries.trends import trends
 from libraries.position import up_day, down_day, inside_day, outside_day
 
 def main():
 
-    list = (6928, 6817, 6915, 6805, 6830, 6895, 6960, 7006, 6785, 6739, 6674)
-    # list = scraper()  # Placeholder for future implementation
-    message, type = find_trend_and_strategy(list[0], list[1], list[2], list[3], list[4], list[5], list[6], list[7], list[8], list[9], list[10])
+    print("Ticker: E-mini S&P 500 Futures (ES=F)")
+    ticker = input("Enter ticker symbol: ")
+
+    prices = scraper(ticker)
+    message, type = find_trend_and_strategy(prices[0], prices[1], prices[2], prices[3], prices[4], prices[5], prices[6], prices[7], prices[8], prices[9], prices[10])
     rsi_status, stochastic_status, adx_status = indicators()
     final_message, strat = final_strategy(type, (rsi_status, stochastic_status, adx_status))
     if type == 1:
@@ -23,9 +26,6 @@ def main():
     else:
         print("Review market conditions for volatility")
 
-# Placeholder for future web scraping implementation or API integration
-def scraper():
-    ...
 
 # Determine trend and suggest trading strategy
 def find_trend_and_strategy(yesterday_high, yesterday_low, today_high, today_low, last_price, resistance1, resistance2, resistance3, support1, support2, support3):
