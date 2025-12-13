@@ -7,7 +7,7 @@ def main():
     # list = scraper()  # Placeholder for future implementation
     message, type = find_trend_and_strategy(list[0], list[1], list[2], list[3], list[4], list[5], list[6], list[7], list[8], list[9], list[10])
     rsi_status, stochastic_status, adx_status = indicators()
-    final_message, strat = final_strategy(type, indicators)
+    final_message, strat = final_strategy(type, (rsi_status, stochastic_status, adx_status))
     if type == 1:
         if strat in [1, 2, 3]:
             print(final_message + f". {message}")
