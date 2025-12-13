@@ -1,15 +1,29 @@
 from libraries.scraper import scraper
 from libraries.trends import trends
 from libraries.position import up_day, down_day, inside_day, outside_day
+from ta.trend import ADXIndicator
+
+import pandas as pd
 
 def main():
-
+    # Prompt user for ticker symbol
     print("Ticker: E-mini S&P 500 Futures (ES=F)")
-    ticker = input("Enter ticker symbol: ")
+    # ticker = input("Enter ticker symbol: ")
+    ticker = "ES=F"
 
-    prices = scraper(ticker)
-    message, type = find_trend_and_strategy(prices[0], prices[1], prices[2], prices[3], prices[4], prices[5], prices[6], prices[7], prices[8], prices[9], prices[10])
-    rsi_status, stochastic_status, adx_status = indicators()
+    # Unpack prices and pivot points from scraper
+    prices, resistance1, resistance2, resistance3, support1, support2, support3 = scraper(ticker)
+
+
+    # Unpack message and type from trend/strategy finder
+    message, type = find_trend_and_strategy(prices[-2]['high'], prices[-2]['low'], prices[-1]['high'], prices[-1]['low'], prices[-1]['close'], resistance1, resistance2, resistance3, support1, support2, support3)
+
+    # Get status of indicators
+    rsi_status, stochastic_status, adx_status = indicators(prices)
+
+    print(f"Today's Prices - High: {prices[-1]['high']}, Low: {prices[-1]['low']}, Close: {prices[-1]['close']}")
+
+    # Get final strategy based on trend type and indicators
     final_message, strat = final_strategy(type, (rsi_status, stochastic_status, adx_status))
     if type == 1:
         if strat in [1, 2, 3]:
@@ -42,18 +56,29 @@ def find_trend_and_strategy(yesterday_high, yesterday_low, today_high, today_low
         return "No clear trend detected", 0
 
 # Analyze technical       
-def indicators():
-    while True:
-        try:
-            rsi = float(input("Enter RSI value: "))
-        except ValueError:
-            print("Please enter a numeric value for RSI. (e.g., 45.5)")
-        else:
-            if 0 <= rsi <= 100:
-                break
-            else:
-                print("Please enter a valid RSI value between 0 and 100. (e.g., 45.5)")
+def indicators(prices):
+    gain, loss = 0.0, 0.0
     
+    for i in range(2, len(prices)-1):
+        change = float(prices[i + 1]['close']) - float(prices[i]['close'])
+
+        if change >= 0.0:
+             gain += change
+        else:
+            loss += abs(change)
+    
+    avg_gain = float(float(gain) / 14.0)  
+    avg_loss = float(float(loss) / 14.0)
+
+    if avg_loss == 0:
+        rs = 0.0
+    else:
+        rs = float(avg_gain / avg_loss)
+    
+    rsi = float(100 - float((float(100) / float(1.0 + rs))))
+    print(f"Relative Strength Index: {rsi:.2f}")
+
+    # Determine RSI status
     if rsi <= 30:
         rsi_status = "oversold"
     elif rsi >= 70:
@@ -61,17 +86,15 @@ def indicators():
     else:
         rsi_status = "neutral"
 
-    while True:
-        try:
-            stochastic = float(input("Enter Stochastic value: "))
-        except ValueError:
-            print("Please enter a numeric value for Stochastic. (e.g., 45.5)")
-        else:
-            if 0 <= stochastic <= 100:
-                break
-            else:
-                print("Please enter a valid Stochastic value between 0 and 100. (e.g., 45.5)")
+    # Stochastic calculation
+    high_14 = max([price['high'] for price in prices[-14:]])
+    low_14 = min([price['low'] for price in prices[-14:]])  
+    stochastic = ((prices[-1]['close'] - low_14 ) / (high_14 - low_14)) * 100  
+    
 
+    print(f"Stochastic: {stochastic:.2f}")
+
+    # Determine stochastic status
     if stochastic <= 20:
         stochastic_status = "oversold"
     elif stochastic >= 80:
@@ -79,20 +102,17 @@ def indicators():
     else:
         stochastic_status = "neutral"
 
-    while True:
-        try:
-            adx = float(input("Enter ADX value: "))
-        except ValueError:
-            print("Please enter a numeric value for ADX. (e.g., 45.5)")
-        else:
-            if 0 <= adx <= 100:
-                break
-            else:
-                print("Please enter a valid ADX value between 0 and 100. (e.g., 45.5)")
+    # ADX calculation (simplified version)
+    df = pd.DataFrame(prices) 
+    adx_indicator = ADXIndicator(high=df['high'], low=df['low'], close=df['close'], window=14)
+    adx = adx_indicator.adx().iloc[-1]  
 
-    if adx < 20:
+    print(f"Average Directional Index (ADX): {adx:.2f}")
+    
+    # Determine ADX status
+    if adx < 25:
         adx_status = "weak trend"
-    elif 20 <= adx <= 40:
+    elif 25 <= adx <= 40:
         adx_status = "strengthening trend"
     else:
         adx_status = "strong trend"
