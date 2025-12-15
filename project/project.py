@@ -22,6 +22,7 @@ def main():
     rsi_status, stochastic_status, adx_status = indicators(prices)
 
     print(f"Today's Prices - High: {prices[-1]['high']}, Low: {prices[-1]['low']}, Close: {prices[-1]['close']}")
+    print(f"Yesterday's Prices - High: {prices[-2]['high']}, Low: {prices[-2]['low']}, Close: {prices[-2]['close']}")
 
     # Get final strategy based on trend type and indicators
     final_message, strat = final_strategy(type, (rsi_status, stochastic_status, adx_status))
@@ -49,7 +50,7 @@ def find_trend_and_strategy(yesterday_high, yesterday_low, today_high, today_low
     elif type == 2:
         return down_day(last_price, today_low, support1, support2, support3)
     elif type == 3:
-        return inside_day(last_price)
+        return inside_day(last_price, today_high, today_low, support1, resistance1)
     elif type == 4:
         return outside_day(last_price)
     else:
