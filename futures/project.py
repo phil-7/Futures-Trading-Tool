@@ -6,7 +6,14 @@ from ta.trend import ADXIndicator
 import pandas as pd
 
 def main():
-    ticker = get_ticker()
+    while True:
+        # Prompt user for ticker symbol
+        print("Ticker(s): E-mini S&P 500 Futures (ES=F) - Moo Moo (MOO)")
+        ticker = input("Enter ticker symbol: ").strip()
+        status = check_ticker(ticker)
+        if status:
+            break
+
 
     # Unpack prices and pivot points from scraper
     prices, resistance1, resistance2, resistance3, support1, support2, support3 = scraper(ticker)
@@ -23,14 +30,17 @@ def main():
     today_low = prices[-1]['low']
     today_close = prices[-1]['close']
     
-    show_today_prices(today_high, today_low, today_close)
+    stp = show_today_prices(today_high, today_low, today_close)
+    print(stp)
 
     # Save yesterday's prices and show user
     y_high = prices[-2]['high']
     y_low = prices[-2]['low']
     y_close = prices[-2]['close']
     
-    show_yesterday_prices(y_high, y_low, y_close)
+    syp = show_yesterday_prices(y_high, y_low, y_close)
+    print(syp)
+    print("")
 
     # Get final strategy based on trend type and indicators
     final_message, strat = final_strategy(type, (rsi_status, stochastic_status, adx_status))
@@ -50,29 +60,23 @@ def main():
         print("Review market conditions for volatility")
 
 # Get Ticker
-def get_ticker():
+def check_ticker(ticker):
     tickers_symbols = ("ES=F", "MOO")
-    # Prompt user for ticker symbol
-    print("Ticker(s): E-mini S&P 500 Futures (ES=F)")
     # This functionality could've been in scraper(), but too many ticker symbols
     while True:
-        ticker = input("Enter ticker symbol: ")
-        ticker = ticker.strip()
         if ticker in tickers_symbols:
-            break
+            return True
         else:
-            print("ENTER VALID TICKER")
-    
-    print("")
-    return ticker
+            print("ENTER VALID TICKER\n")
+            return False
         
 # Print today's prices
 def show_today_prices(h, l, c):
-    return print(f"Today's Prices - High: {h}, Low: {l}, Close: {c}")
+    return f"Today's Prices - High: {h}, Low: {l}, Close: {c}"
 
-# Print today's prices
+# Print yesterday's prices
 def show_yesterday_prices(h, l, c):
-    return print(f"Yesterday's Prices - High: {h}, Low: {l}, Close: {c}\n")
+    return f"Yesterday's Prices - High: {h}, Low: {l}, Close: {c}"
 
 # Determine trend and suggest trading strategy
 def find_trend_and_strategy(yesterday_high, yesterday_low, today_high, today_low, last_price, resistance1, resistance2, resistance3, support1, support2, support3):
