@@ -72,7 +72,7 @@ def show_today_prices(h, l, c):
 
 # Print today's prices
 def show_yesterday_prices(h, l, c):
-    return print(f"Yesterday's's Prices - High: {h}, Low: {l}, Close: {c}\n")
+    return print(f"Yesterday's Prices - High: {h}, Low: {l}, Close: {c}\n")
 
 # Determine trend and suggest trading strategy
 def find_trend_and_strategy(yesterday_high, yesterday_low, today_high, today_low, last_price, resistance1, resistance2, resistance3, support1, support2, support3):
@@ -139,6 +139,7 @@ def indicators(prices):
     df = pd.DataFrame(prices) 
     adx_indicator = ADXIndicator(high=df['high'], low=df['low'], close=df['close'], window=14)
     adx = adx_indicator.adx().iloc[-1]  
+    
 
     print(f"Average Directional Index (ADX): {adx:.2f}\n")
     
