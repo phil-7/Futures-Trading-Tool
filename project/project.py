@@ -6,10 +6,7 @@ from ta.trend import ADXIndicator
 import pandas as pd
 
 def main():
-    # Prompt user for ticker symbol
-    print("Ticker: E-mini S&P 500 Futures (ES=F)")
-    # ticker = input("Enter ticker symbol: ")
-    ticker = "ES=F"
+    ticker = get_ticker()
 
     # Unpack prices and pivot points from scraper
     prices, resistance1, resistance2, resistance3, support1, support2, support3 = scraper(ticker)
@@ -21,8 +18,19 @@ def main():
     # Get status of indicators
     rsi_status, stochastic_status, adx_status = indicators(prices)
 
-    print(f"Today's Prices - High: {prices[-1]['high']}, Low: {prices[-1]['low']}, Close: {prices[-1]['close']}")
-    print(f"Yesterday's Prices - High: {prices[-2]['high']}, Low: {prices[-2]['low']}, Close: {prices[-2]['close']}")
+    # Save today's prices and show user
+    today_high = prices[-1]['high']
+    today_low = prices[-1]['low']
+    today_close = prices[-1]['close']
+    
+    show_today_prices(today_high, today_low, today_close)
+
+    # Save yesterday's prices and show user
+    y_high = prices[-2]['high']
+    y_low = prices[-2]['low']
+    y_close = prices[-2]['close']
+    
+    show_yesterday_prices(y_high, y_low, y_close)
 
     # Get final strategy based on trend type and indicators
     final_message, strat = final_strategy(type, (rsi_status, stochastic_status, adx_status))
@@ -41,6 +49,30 @@ def main():
     else:
         print("Review market conditions for volatility")
 
+# Get Ticker
+def get_ticker():
+    tickers_symbols = ("ES=F", "MOO")
+    # Prompt user for ticker symbol
+    print("Ticker(s): E-mini S&P 500 Futures (ES=F)")
+    # This functionality could've been in scraper(), but too many ticker symbols
+    while True:
+        ticker = input("Enter ticker symbol: ")
+        ticker = ticker.strip()
+        if ticker in tickers_symbols:
+            break
+        else:
+            print("ENTER VALID TICKER")
+    
+    print("")
+    return ticker
+        
+# Print today's prices
+def show_today_prices(h, l, c):
+    return print(f"Today's Prices - High: {h}, Low: {l}, Close: {c}")
+
+# Print today's prices
+def show_yesterday_prices(h, l, c):
+    return print(f"Yesterday's's Prices - High: {h}, Low: {l}, Close: {c}\n")
 
 # Determine trend and suggest trading strategy
 def find_trend_and_strategy(yesterday_high, yesterday_low, today_high, today_low, last_price, resistance1, resistance2, resistance3, support1, support2, support3):
@@ -108,7 +140,7 @@ def indicators(prices):
     adx_indicator = ADXIndicator(high=df['high'], low=df['low'], close=df['close'], window=14)
     adx = adx_indicator.adx().iloc[-1]  
 
-    print(f"Average Directional Index (ADX): {adx:.2f}")
+    print(f"Average Directional Index (ADX): {adx:.2f}\n")
     
     # Determine ADX status
     if adx < 25:
