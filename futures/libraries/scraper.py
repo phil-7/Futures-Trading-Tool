@@ -2,16 +2,15 @@ import yfinance as yf
 import pandas as pd
 
 
-# Note: Use "ES=F" for E-mini S&P 500 futures data
-
 def scraper(ticker):
 
     # Fetch historical data for the given ticker
     prices = yf.Ticker(ticker)
     data = prices.history(period="60d", interval="1d")
 
-    # Save closing prices in a list of dictionaries
+    # Save closing prices in a list of dictionaries to make it easier to retrieve data
     closing_prices = []
+    # iterrows() returns two values for each row. "Saving" first row to date to access prices in second row
     for date, row in data.iterrows():
         closing_prices.append({"high": row['High'], "low": row['Low'], "close": row['Close']})
 

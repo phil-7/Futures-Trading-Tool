@@ -146,6 +146,7 @@ def indicators(prices):
         stochastic_status = "neutral"
 
     # ADX calculation (simplified version)
+    # ADX calculation code taken from online source
     df = pd.DataFrame(prices) 
     adx_indicator = ADXIndicator(high=df['high'], low=df['low'], close=df['close'], window=14)
     adx = adx_indicator.adx().iloc[-1]  
