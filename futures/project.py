@@ -46,17 +46,23 @@ def main():
     final_message, strat = final_strategy(type, (rsi_status, stochastic_status, adx_status))
     if type == 1:
         if strat in [1, 2, 3]:
+            print("Up Day Strategy:")
             print(final_message + f". {message}")
         else:
+            print("Up Day Strategy:")
             print("Review market conditions for volatility")
     elif type == 2:
         if strat in [1, 2, 3]:
+            print("Down Day Strategy:")
             print(final_message + f". {message}")
         else:
+            print("Down Day Strategy:")
             print("Review market conditions for volatility")
     elif type == 3:
+        print("Inside Day Strategy:")
         print(final_message + f". {message}")
     else:
+        print("Outside Day Strategy:")
         print("Review market conditions for volatility")
 
 # Get Ticker
