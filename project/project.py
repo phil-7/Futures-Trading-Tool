@@ -1,31 +1,88 @@
 from libraries.scraper import scraper
 from libraries.trends import trends
 from libraries.position import up_day, down_day, inside_day, outside_day
+from ta.trend import ADXIndicator
+
+import pandas as pd
 
 def main():
+    while True:
+        # Prompt user for ticker symbol
+        print("Ticker(s): E-mini S&P 500 Futures (ES=F) - Moo Moo (MOO)")
+        ticker = input("Enter ticker symbol: ").strip()
+        status = check_ticker(ticker)
+        if status:
+            break
 
-    print("Ticker: E-mini S&P 500 Futures (ES=F)")
-    ticker = input("Enter ticker symbol: ")
 
-    prices = scraper(ticker)
-    message, type = find_trend_and_strategy(prices[0], prices[1], prices[2], prices[3], prices[4], prices[5], prices[6], prices[7], prices[8], prices[9], prices[10])
-    rsi_status, stochastic_status, adx_status = indicators()
+    # Unpack prices and pivot points from scraper
+    prices, resistance1, resistance2, resistance3, support1, support2, support3 = scraper(ticker)
+
+
+    # Unpack message and type from trend/strategy finder
+    message, type = find_trend_and_strategy(prices[-2]['high'], prices[-2]['low'], prices[-1]['high'], prices[-1]['low'], prices[-1]['close'], resistance1, resistance2, resistance3, support1, support2, support3)
+
+    # Get status of indicators
+    rsi_status, stochastic_status, adx_status = indicators(prices)
+
+    # Save today's prices and show user
+    today_high = prices[-1]['high']
+    today_low = prices[-1]['low']
+    today_close = prices[-1]['close']
+    
+    stp = show_today_prices(today_high, today_low, today_close)
+    print(stp)
+
+    # Save yesterday's prices and show user
+    y_high = prices[-2]['high']
+    y_low = prices[-2]['low']
+    y_close = prices[-2]['close']
+    
+    syp = show_yesterday_prices(y_high, y_low, y_close)
+    print(syp)
+    print("")
+
+    # Get final strategy based on trend type and indicators
     final_message, strat = final_strategy(type, (rsi_status, stochastic_status, adx_status))
     if type == 1:
         if strat in [1, 2, 3]:
+            print("Up Day Strategy:")
             print(final_message + f". {message}")
         else:
+            print("Up Day Strategy:")
             print("Review market conditions for volatility")
     elif type == 2:
         if strat in [1, 2, 3]:
+            print("Down Day Strategy:")
             print(final_message + f". {message}")
         else:
+            print("Down Day Strategy:")
             print("Review market conditions for volatility")
     elif type == 3:
+        print("Inside Day Strategy:")
         print(final_message + f". {message}")
     else:
+        print("Outside Day Strategy:")
         print("Review market conditions for volatility")
 
+# Get Ticker
+def check_ticker(ticker):
+    tickers_symbols = ("ES=F", "MOO")
+    # This functionality could've been in scraper(), but too many ticker symbols
+    while True:
+        if ticker in tickers_symbols:
+            return True
+        else:
+            print("ENTER VALID TICKER\n")
+            return False
+        
+# Print today's prices
+def show_today_prices(h, l, c):
+    return f"Today's Prices - High: {h}, Low: {l}, Close: {c}"
+
+# Print yesterday's prices
+def show_yesterday_prices(h, l, c):
+    return f"Yesterday's Prices - High: {h}, Low: {l}, Close: {c}"
 
 # Determine trend and suggest trading strategy
 def find_trend_and_strategy(yesterday_high, yesterday_low, today_high, today_low, last_price, resistance1, resistance2, resistance3, support1, support2, support3):
@@ -35,25 +92,36 @@ def find_trend_and_strategy(yesterday_high, yesterday_low, today_high, today_low
     elif type == 2:
         return down_day(last_price, today_low, support1, support2, support3)
     elif type == 3:
-        return inside_day(last_price)
+        return inside_day(last_price, today_high, today_low, support1, resistance1)
     elif type == 4:
         return outside_day(last_price)
     else:
         return "No clear trend detected", 0
 
 # Analyze technical       
-def indicators():
-    while True:
-        try:
-            rsi = float(input("Enter RSI value: "))
-        except ValueError:
-            print("Please enter a numeric value for RSI. (e.g., 45.5)")
-        else:
-            if 0 <= rsi <= 100:
-                break
-            else:
-                print("Please enter a valid RSI value between 0 and 100. (e.g., 45.5)")
+def indicators(prices):
+    gain, loss = 0.0, 0.0
     
+    for i in range(2, len(prices)-1):
+        change = float(prices[i + 1]['close']) - float(prices[i]['close'])
+
+        if change >= 0.0:
+             gain += change
+        else:
+            loss += abs(change)
+    
+    avg_gain = float(float(gain) / 14.0)  
+    avg_loss = float(float(loss) / 14.0)
+
+    if avg_loss == 0:
+        rs = 0.0
+    else:
+        rs = float(avg_gain / avg_loss)
+    
+    rsi = float(100 - float((float(100) / float(1.0 + rs))))
+    print(f"Relative Strength Index: {rsi:.2f}")
+
+    # Determine RSI status
     if rsi <= 30:
         rsi_status = "oversold"
     elif rsi >= 70:
@@ -61,17 +129,15 @@ def indicators():
     else:
         rsi_status = "neutral"
 
-    while True:
-        try:
-            stochastic = float(input("Enter Stochastic value: "))
-        except ValueError:
-            print("Please enter a numeric value for Stochastic. (e.g., 45.5)")
-        else:
-            if 0 <= stochastic <= 100:
-                break
-            else:
-                print("Please enter a valid Stochastic value between 0 and 100. (e.g., 45.5)")
+    # Stochastic calculation
+    high_14 = max([price['high'] for price in prices[-14:]])
+    low_14 = min([price['low'] for price in prices[-14:]])  
+    stochastic = ((prices[-1]['close'] - low_14 ) / (high_14 - low_14)) * 100  
+    
 
+    print(f"Stochastic: {stochastic:.2f}")
+
+    # Determine stochastic status
     if stochastic <= 20:
         stochastic_status = "oversold"
     elif stochastic >= 80:
@@ -79,20 +145,19 @@ def indicators():
     else:
         stochastic_status = "neutral"
 
-    while True:
-        try:
-            adx = float(input("Enter ADX value: "))
-        except ValueError:
-            print("Please enter a numeric value for ADX. (e.g., 45.5)")
-        else:
-            if 0 <= adx <= 100:
-                break
-            else:
-                print("Please enter a valid ADX value between 0 and 100. (e.g., 45.5)")
+    # ADX calculation (simplified version)
+    # ADX calculation code taken from online source
+    df = pd.DataFrame(prices) 
+    adx_indicator = ADXIndicator(high=df['high'], low=df['low'], close=df['close'], window=14)
+    adx = adx_indicator.adx().iloc[-1]  
+    
 
-    if adx < 20:
+    print(f"Average Directional Index (ADX): {adx:.2f}\n")
+    
+    # Determine ADX status
+    if adx < 25:
         adx_status = "weak trend"
-    elif 20 <= adx <= 40:
+    elif 25 <= adx <= 40:
         adx_status = "strengthening trend"
     else:
         adx_status = "strong trend"
