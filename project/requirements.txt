@@ -1,4 +1,4 @@
 pandas
-pytest (python -m pytest test_project.py)
+pytest # (python -m pytest test_project.py on Mac)
 ta
 yfinance

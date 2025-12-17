@@ -12,6 +12,7 @@ def main():
         ticker = input("Enter ticker symbol: ").strip()
         status = check_ticker(ticker)
         if status:
+            print("")
             break
 
 
