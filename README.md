@@ -69,7 +69,7 @@ python project.py
 
 ### Example Output
 
-Ticker(s): E-mini S&P 500 Futures (ES=F) - Moo Moo (MOO)  
+```Ticker(s): E-mini S&P 500 Futures (ES=F) - Moo Moo (MOO)  
 Enter ticker symbol: ES=F
 
 Relative Strength Index: 51.56  
@@ -81,12 +81,12 @@ Yesterday's Prices - High: 6872.5, Low: 6806.25, Close: 6823.0
 
 Down Day Strategy:   
 Review market conditions for volatility
+```
 
 ### Testing
 
 ```bash
 pytest test_project.py
 ```
-
 
 
